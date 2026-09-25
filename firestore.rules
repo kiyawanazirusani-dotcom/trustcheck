@@ -1,0 +1,23 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /reports/{reportId} {
+
+      // Jama'a na iya karanta rahotanni kawai idan an riga an tabbatar (approved)
+      allow read: if resource.data.status == "approved";
+
+      // Sabon rahoto: dole mai amfani ya tabbatar da lambar waya (auth != null),
+      // kuma sabon rahoto koyaushe zai fara a matsayin "pending".
+      allow create: if request.auth != null
+                    && request.resource.data.status == "pending"
+                    && request.resource.data.reporterUid == request.auth.uid;
+
+      // Babu wanda zai iya gyara ko goge rahoto daga app ɗin kai tsaye.
+      // Kai kawai (Naziru), ta hanyar Firebase Console, za ka canza status
+      // daga "pending" zuwa "approved" bayan ka duba rahoton.
+      allow update, delete: if false;
+    }
+  }
+}
