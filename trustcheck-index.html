@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ha">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrustCheck — Duba Kafin Ka Amince</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #14213D;
+    --paper: #F6F2E9;
+    --paper-raised: #FBF9F3;
+    --verified: #1F7A54;
+    --verified-bg: #E7F1EB;
+    --warning: #C7862B;
+    --warning-bg: #F6EBDC;
+    --alert: #A6382A;
+    --alert-bg: #F3E4E1;
+    --muted: #5B6B82;
+    --line: #D8D1BF;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 620px; margin: 0 auto; padding: 0 20px 80px; }
+  header { padding: 48px 0 32px; text-align: center; border-bottom: 1px solid var(--line); }
+  .seal {
+    width: 64px; height: 64px; margin: 0 auto 20px; border: 2px solid var(--ink);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative;
+  }
+  .seal::before { content: ""; position: absolute; inset: 5px; border: 1px solid var(--ink); border-radius: 50%; }
+  .seal svg { width: 26px; height: 26px; }
+  h1 { font-family: var(--serif); font-weight: 500; font-size: 32px; letter-spacing: -0.01em; margin: 0 0 8px; }
+  .tagline { color: var(--muted); font-size: 15px; margin: 0; font-style: italic; font-family: var(--serif); }
+  nav { display: flex; justify-content: center; gap: 4px; margin: 28px 0 0; }
+  nav button {
+    font-family: var(--sans); font-size: 14px; font-weight: 600; background: none; border: none;
+    color: var(--muted); padding: 10px 18px; cursor: pointer; border-bottom: 2px solid transparent;
+  }
+  nav button.active { color: var(--ink); border-bottom-color: var(--ink); }
+  section.view { display: none; padding-top: 36px; }
+  section.view.active { display: block; }
+  .field-label { font-size: 13px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 8px; }
+  select, input[type=text], input[type=tel], textarea {
+    width: 100%; font-family: var(--sans); font-size: 16px; padding: 14px 16px;
+    border: 1px solid var(--line); border-radius: 4px; background: var(--paper-raised); color: var(--ink);
+  }
+  select:focus, input:focus, textarea:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+  textarea { resize: vertical; min-height: 90px; }
+  .row { margin-bottom: 18px; }
+  .btn {
+    font-family: var(--sans); font-weight: 600; font-size: 15px; padding: 14px 24px;
+    border-radius: 4px; border: none; cursor: pointer; width: 100%;
+  }
+  .btn-primary { background: var(--ink); color: var(--paper); }
+  .btn-primary:hover { background: #0d1730; }
+  .btn-primary:disabled { background: var(--muted); cursor: wait; }
+  .btn-secondary { background: none; color: var(--ink); border: 1px solid var(--ink); }
+  #resultBox { margin-top: 28px; }
+  .verdict { border: 1px solid var(--line); border-radius: 6px; padding: 24px; text-align: center; }
+  .verdict.clear { border-color: var(--verified); background: var(--verified-bg); }
+  .verdict.flagged { border-color: var(--alert); background: var(--alert-bg); }
+  .verdict-label { font-family: var(--serif); font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .verdict.clear .verdict-label { color: var(--verified); }
+  .verdict.flagged .verdict-label { color: var(--alert); }
+  .verdict-sub { color: var(--muted); font-size: 14px; margin: 0; }
+  .evidence-list { margin-top: 20px; }
+  .evidence-item { border-top: 1px solid var(--line); padding: 16px 0; }
+  .evidence-item:first-child { border-top: none; }
+  .evidence-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .evidence-reason { font-size: 15px; }
+  .disclaimer {
+    margin-top: 24px; font-size: 12.5px; color: var(--muted); line-height: 1.6;
+    border-left: 2px solid var(--line); padding-left: 12px;
+  }
+  .success-note {
+    border: 1px solid var(--verified); background: var(--verified-bg); color: var(--verified);
+    padding: 16px; border-radius: 6px; font-size: 14px; margin-top: 16px;
+  }
+  .demo-banner {
+    background: var(--warning-bg); color: var(--warning); font-size: 12.5px;
+    padding: 10px 14px; border-radius: 4px; text-align: center; margin-bottom: 24px;
+  }
+  .hint { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+  .step-block { border: 1px solid var(--line); border-radius: 6px; padding: 20px; background: var(--paper-raised); }
+  .step-title { font-family: var(--serif); font-size: 17px; margin: 0 0 14px; }
+  .inline-row { display: flex; gap: 10px; }
+  .inline-row .btn { width: auto; white-space: nowrap; }
+  .locked-note { font-size: 13px; color: var(--muted); text-align: center; padding: 20px 0; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="seal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#14213D" stroke-width="1.6">
+        <path d="M4 12l5 5L20 6"/>
+      </svg>
+    </div>
+    <h1>TrustCheck</h1>
+    <p class="tagline">Duba kafin ka amince. Tabbatar kafin ka biya.</p>
+    <nav>
+      <button id="tabSearch" class="active" onclick="switchTab('search')">Duba Lamba</button>
+      <button id="tabReport" onclick="switchTab('report')">Ba da Rahoto</button>
+    </nav>
+  </header>
+
+  <div id="demoBanner" class="demo-banner" style="display:none;">
+    Ana amfani da bayanan gwaji (demo) — babu Firebase da aka haɗa tukuna.
+  </div>
+
+  <!-- SEARCH VIEW -->
+  <section id="view-search" class="view active">
+    <div class="row">
+      <label class="field-label" for="searchType">IRIN BAYANI</label>
+      <select id="searchType">
+        <option value="phone">Lambar waya</option>
+        <option value="business_name">Sunan kasuwanci</option>
+        <option value="bank_account">Lambar asusun banki</option>
+        <option value="website">Shafin yanar gizo</option>
+      </select>
+    </div>
+    <div class="row">
+      <label class="field-label" for="searchValue">SHIGAR DA BAYANI</label>
+      <input type="text" id="searchValue" placeholder="misali: 08012345678">
+    </div>
+    <button class="btn btn-primary" onclick="runSearch()" id="searchBtn">Duba</button>
+    <div id="resultBox"></div>
+  </section>
+
+  <!-- REPORT VIEW -->
+  <section id="view-report" class="view">
+
+    <!-- STEP A: phone verification -->
+    <div id="authStep" class="step-block">
+      <p class="step-title">Tabbatar da Lambar Wayarka Tukuna</p>
+      <p class="hint" style="margin-top:-8px;margin-bottom:16px;">Wannan yana hana mutane aika rahotannin bogi da sunaye daban-daban.</p>
+      <div class="row">
+        <label class="field-label" for="repPhone">LAMBAR WAYARKA</label>
+        <input type="tel" id="repPhone" placeholder="080XXXXXXXX">
+      </div>
+      <button class="btn btn-primary" onclick="sendOtp()" id="sendOtpBtn">Aika Code na Tabbatarwa</button>
+      <div id="otpBlock" style="display:none; margin-top:16px;">
+        <div class="row">
+          <label class="field-label" for="repOtp">SHIGAR DA CODE</label>
+          <input type="text" id="repOtp" placeholder="123456">
+        </div>
+        <button class="btn btn-primary" onclick="verifyOtp()" id="verifyOtpBtn">Tabbatar</button>
+      </div>
+      <div id="recaptcha-container"></div>
+    </div>
+
+    <!-- STEP B: report form (hidden until verified) -->
+    <div id="reportFormBlock" style="display:none;">
+      <div class="row">
+        <label class="field-label" for="repType">IRIN BAYANI</label>
+        <select id="repType">
+          <option value="phone">Lambar waya</option>
+          <option value="business_name">Sunan kasuwanci</option>
+          <option value="bank_account">Lambar asusun banki</option>
+          <option value="website">Shafin yanar gizo</option>
+        </select>
+      </div>
+      <div class="row">
+        <label class="field-label" for="repValue">LAMBA / SUNA (na wanda ake korafi a kai)</label>
+        <input type="text" id="repValue" placeholder="misali: 08012345678">
+      </div>
+      <div class="row">
+        <label class="field-label" for="repReason">ME YA FARU?</label>
+        <textarea id="repReason" placeholder="Bayyana abin da ya faru dalla-dalla..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="submitReport()" id="reportBtn">Aika Rahoto</button>
+      <div id="reportResult"></div>
+      <p class="hint" style="margin-top:14px;">Rahotonka zai kasance "pending" har sai an duba shi kafin ya bayyana wa jama'a a bincike.</p>
+    </div>
+  </section>
+
+  <p class="disclaimer" id="footerDisclaimer">
+    TrustCheck baya alkawarin gano kowace zamba, kuma baya kiran kowa "mai zamba" kai tsaye.
+    Manufarsa ita ce tattara hujjoji da alamun haɗari da mutane suka bayar, ya bayyana su a fili,
+    domin ka yanke shawara mai kyau kafin ka biya ko ci gaba da ciniki.
+  </p>
+</div>
+
+<script type="module">
+  // ============================================================
+  // FIREBASE SETUP
+  // Maye gurbin wannan da config ɗin ka daga Firebase Console
+  // (Project settings > General > Your apps > SDK setup and config)
+  // ============================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyB_Rqr6aWfKYHo6-drcddMbFbQqBI6OXUA",
+    authDomain: "trustcheck-ng.firebaseapp.com",
+    projectId: "trustcheck-ng",
+    storageBucket: "trustcheck-ng.firebasestorage.app",
+    messagingSenderId: "1069513976232",
+    appId: "1:1069513976232:web:fe38cedaed4bafe934559d"
+  };
+
+  const isConfigured = firebaseConfig.apiKey !== "REPLACE_ME";
+  let db = null, storage = null, auth = null;
+  let verifiedUid = null;
+  let confirmationResult = null;
+
+  let demoReports = [
+    { type: "phone", value: "08099999999", reason: "Na biya ₦15,000 don wayar hannu, bai taɓa turo kaya ba, ya toshe lambata.", created_at: "2026-08-14", status: "approved" },
+    { type: "business_name", value: "quickdealsng", reason: "Ya nemi biya kai tsaye zuwa asusun banki maimakon Paystack, sannan ya ɓace.", created_at: "2026-09-02", status: "approved" }
+  ];
+
+  if (isConfigured) {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const firestore = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    const authMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+    const app = initializeApp(firebaseConfig);
+    db = firestore.getFirestore(app);
+    auth = authMod.getAuth(app);
+    window.__fs = firestore;
+    window.__auth = authMod;
+    window.__authInstance = auth;
+    window.recaptchaVerifier = new authMod.RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+  } else {
+    document.getElementById('demoBanner').style.display = 'block';
+  }
+
+  window.switchTab = function(tab) {
+    document.getElementById('tabSearch').classList.toggle('active', tab === 'search');
+    document.getElementById('tabReport').classList.toggle('active', tab === 'report');
+    document.getElementById('view-search').classList.toggle('active', tab === 'search');
+    document.getElementById('view-report').classList.toggle('active', tab === 'report');
+  };
+
+  function normalize(v) { return v.trim().toLowerCase().replace(/\s+/g, ''); }
+
+  function toE164(local) {
+    local = local.trim().replace(/\s+/g, '');
+    if (local.startsWith('+')) return local;
+    if (local.startsWith('0')) return '+234' + local.slice(1);
+    return '+234' + local;
+  }
+
+  // ===== Phone verification (Step A) =====
+  window.sendOtp = async function() {
+    const phoneRaw = document.getElementById('repPhone').value;
+    if (!phoneRaw.trim()) { alert("Da fatan za a shigar da lambar wayarka."); return; }
+
+    if (!isConfigured) {
+      // Demo mode: skip real SMS, auto-unlock after 1 second
+      const btn = document.getElementById('sendOtpBtn');
+      btn.disabled = true; btn.textContent = "Ana aikawa... (demo)";
+      setTimeout(() => {
+        verifiedUid = "demo-user";
+        unlockReportForm();
+      }, 800);
+      return;
+    }
+
+    const btn = document.getElementById('sendOtpBtn');
+    btn.disabled = true; btn.textContent = "Ana aikawa...";
+    try {
+      const { signInWithPhoneNumber } = window.__auth;
+      confirmationResult = await signInWithPhoneNumber(window.__authInstance, toE164(phoneRaw), window.recaptchaVerifier);
+      document.getElementById('otpBlock').style.display = 'block';
+      btn.textContent = "An Aika. Sake Aikawa?";
+      btn.disabled = false;
+    } catch (err) {
+      alert("An kasa aikawa: " + err.message);
+      btn.disabled = false; btn.textContent = "Aika Code na Tabbatarwa";
+    }
+  };
+
+  window.verifyOtp = async function() {
+    const code = document.getElementById('repOtp').value.trim();
+    if (!code) { alert("Da fatan za a shigar da code."); return; }
+    const btn = document.getElementById('verifyOtpBtn');
+    btn.disabled = true; btn.textContent = "Ana tabbatarwa...";
+    try {
+      const result = await confirmationResult.confirm(code);
+      verifiedUid = result.user.uid;
+      unlockReportForm();
+    } catch (err) {
+      alert("Code ba daidai ba ne, ko ya ƙare. Ka sake gwadawa.");
+      btn.disabled = false; btn.textContent = "Tabbatar";
+    }
+  };
+
+  function unlockReportForm() {
+    document.getElementById('authStep').style.display = 'none';
+    document.getElementById('reportFormBlock').style.display = 'block';
+  }
+
+  // ===== Search =====
+  window.runSearch = async function() {
+    const type = document.getElementById('searchType').value;
+    const rawValue = document.getElementById('searchValue').value;
+    if (!rawValue.trim()) return;
+    const btn = document.getElementById('searchBtn');
+    btn.disabled = true; btn.textContent = "Ana duba...";
+    let matches = [];
+    if (isConfigured) {
+      const { collection, query, where, getDocs } = window.__fs;
+      const q = query(
+        collection(db, "reports"),
+        where("type", "==", type),
+        where("value", "==", normalize(rawValue)),
+        where("status", "==", "approved")
+      );
+      const snap = await getDocs(q);
+      snap.forEach(doc => matches.push(doc.data()));
+    } else {
+      matches = demoReports.filter(r => r.type === type && r.value === normalize(rawValue) && r.status === "approved");
+    }
+    btn.disabled = false; btn.textContent = "Duba";
+    renderResult(matches);
+  };
+
+  function renderResult(matches) {
+    const box = document.getElementById('resultBox');
+    if (matches.length === 0) {
+      box.innerHTML = `
+        <div class="verdict clear">
+          <p class="verdict-label">Babu Rahoto</p>
+          <p class="verdict-sub">Ba a samu wani rahoton zamba a kan wannan bayani ba a TrustCheck. Wannan ba shaida ba ne cewa amintacce ne — ka ci gaba da yin taka-tsantsan.</p>
+        </div>`;
+      return;
+    }
+    const items = matches.map(m => `
+      <div class="evidence-item">
+        <div class="evidence-meta"><span>${m.created_at || ''}</span></div>
+        <p class="evidence-reason">${escapeHtml(m.reason)}</p>
+      </div>
+    `).join('');
+    box.innerHTML = `
+      <div class="verdict flagged">
+        <p class="verdict-label">An Samu ${matches.length} Rahoto${matches.length > 1 ? 'anni' : ''}</p>
+        <p class="verdict-sub">Ga dalilan da aka bayar. Ka duba su kafin ka ci gaba.</p>
+      </div>
+      <div class="evidence-list">${items}</div>
+    `;
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // ===== Report submission (Step B) =====
+  window.submitReport = async function() {
+    const type = document.getElementById('repType').value;
+    const rawValue = document.getElementById('repValue').value;
+    const reason = document.getElementById('repReason').value.trim();
+
+    if (!rawValue.trim() || !reason) {
+      alert("Da fatan za a cika lamba/suna da kuma bayanin abin da ya faru.");
+      return;
+    }
+
+    const btn = document.getElementById('reportBtn');
+    btn.disabled = true; btn.textContent = "Ana aikawa...";
+
+    const record = {
+      type, value: normalize(rawValue), reason,
+      status: isConfigured ? "pending" : "approved",
+      reporterUid: verifiedUid,
+      created_at: new Date().toISOString().slice(0, 10)
+    };
+
+    if (isConfigured) {
+      const { collection, addDoc } = window.__fs;
+      await addDoc(collection(db, "reports"), record);
+    } else {
+      demoReports.push(record);
+    }
+
+    btn.disabled = false; btn.textContent = "Aika Rahoto";
+    document.getElementById('reportResult').innerHTML = `
+      <div class="success-note">An karɓi rahotonka. ${isConfigured ? 'Zai bayyana bayan an duba shi.' : 'Na gode da taimaka wa wasu su tsira daga zamba.'}</div>
+    `;
+    document.getElementById('repValue').value = '';
+    document.getElementById('repReason').value = '';
+  };
+</script>
+
+</body>
+</html>
